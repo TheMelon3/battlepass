@@ -217,7 +217,7 @@
                     <div class="flex-1 max-w-md">
                         <div class="flex justify-between text-xs font-bold mb-1.5">
                             <span class="text-gray-400">Прогресс уровня</span>
-                            <span class="text-amber-400"><span id="stat-current-lvl-exp">0</span> / 100 EXP</span>
+                            <span class="text-amber-400"><span id="stat-current-lvl-exp">0</span> / <span id="stat-exp-per-level">100</span> EXP</span>
                         </div>
                         <div class="w-full h-3.5 bg-[#101114] rounded-full overflow-hidden border border-[#272a33] p-0.5">
                             <div id="stat-progress-bar" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500" style="width: 0%"></div>
@@ -296,7 +296,7 @@
                 </div>
             </section>
 
-            <!-- ВКЛАДКА 4: ТОП БОЙЦОВ (БЕЗ АДМИНОВ, С ФИЛЬТРОМ ПО ФРАКЦИЯМ) -->
+            <!-- ВКЛАДКА 4: ТОП БОЙЦОВ -->
             <section id="view-leaderboard" class="hidden space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h3 class="text-lg font-bold text-white">Рейтинг военнослужащих МО</h3>
@@ -336,6 +336,9 @@
                     </button>
                     <button onclick="switchAdminSubtab('payouts')" id="adm-sub-payouts" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#181a20] text-gray-300 hover:text-white border border-[#272a33]">
                         <i class="fa-solid fa-hand-holding-dollar mr-1.5"></i>Выдача призов (<span id="adm-count-payouts">0</span>)
+                    </button>
+                    <button onclick="switchAdminSubtab('logs')" id="adm-sub-logs" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#181a20] text-gray-300 hover:text-white border border-[#272a33]">
+                        <i class="fa-solid fa-book mr-1.5"></i>Логи действий
                     </button>
                     <button onclick="switchAdminSubtab('users')" id="adm-sub-users" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#181a20] text-gray-300 hover:text-white border border-[#272a33]">
                         <i class="fa-solid fa-users-gear mr-1.5"></i>Бойцы и Админы
@@ -378,7 +381,31 @@
                     </div>
                 </div>
 
-                <!-- 5.4 Бойцы и Админы -->
+                <!-- 5.4 ЛОГИ ОТЧЕТОВ И ВЫДАЧИ ПРИЗОВ -->
+                <div id="admin-panel-logs" class="hidden space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex gap-2 bg-[#16181d] p-1 rounded-xl border border-[#272a33]">
+                            <button onclick="switchLogType('payouts')" id="log-type-payouts" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black transition">
+                                <i class="fa-solid fa-gift mr-1"></i>Выданные призы (<span id="log-count-payouts">0</span>)
+                            </button>
+                            <button onclick="switchLogType('submissions')" id="log-type-submissions" class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition">
+                                <i class="fa-solid fa-file-circle-check mr-1"></i>Проверенные отчеты (<span id="log-count-submissions">0</span>)
+                            </button>
+                        </div>
+                        <input type="text" id="admin-log-search" oninput="renderAdminLogs()" placeholder="Поиск по нику бойца или следящего..." class="px-4 py-2 rounded-xl bg-[#101114] border border-[#272a33] text-xs text-white focus:border-amber-500 focus:outline-none w-full sm:w-72">
+                    </div>
+
+                    <div class="card-glass rounded-2xl overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead id="admin-logs-thead" class="border-b border-[#272a33] bg-[#121317] text-xs uppercase text-gray-400"></thead>
+                                <tbody id="admin-logs-tbody" class="divide-y divide-[#272a33] text-xs sm:text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5.5 Бойцы и Админы -->
                 <div id="admin-panel-users" class="hidden space-y-4">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <input type="text" id="admin-user-search" oninput="renderAdminUsers()" placeholder="Поиск по нику..." class="px-4 py-2 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none w-full sm:w-72">
@@ -403,7 +430,7 @@
                     </div>
                 </div>
 
-                <!-- 5.5 Конструктор БП -->
+                <!-- 5.6 Конструктор БП -->
                 <div id="admin-panel-manage" class="hidden space-y-6">
                     <div id="seed-banner" class="card-glass rounded-2xl p-4 border border-amber-500/40 flex flex-wrap items-center justify-between gap-4">
                         <div class="text-xs">
@@ -457,14 +484,20 @@
                     </div>
                 </div>
 
-                <!-- 5.6 НАСТРОЙКИ СЕЗОНА И ПРАВИЛ -->
+                <!-- 5.7 НАСТРОЙКИ СЕЗОНА И ПРАВИЛ -->
                 <div id="admin-panel-season" class="hidden max-w-2xl">
                     <div class="card-glass rounded-2xl p-6 space-y-4">
-                        <h4 class="font-bold text-white text-base"><i class="fa-solid fa-calendar-check text-amber-500 mr-2"></i>Настройки сроков Battle Pass и объявлений</h4>
+                        <h4 class="font-bold text-white text-base"><i class="fa-solid fa-calendar-check text-amber-500 mr-2"></i>Настройки сроков, EXP за уровень и объявлений</h4>
                         <form onsubmit="adminSaveSeasonSettings(event)" class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Название сезона</label>
-                                <input type="text" id="cfg-season-name" placeholder="Зимний призыв 2026" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Название сезона</label>
+                                    <input type="text" id="cfg-season-name" placeholder="Зимний призыв 2026" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-amber-400 uppercase mb-1">EXP за 1 уровень</label>
+                                    <input type="number" id="cfg-exp-per-level" min="10" max="10000" required placeholder="100" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none">
+                                </div>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -614,11 +647,23 @@
             return `${nickname.trim().toLowerCase()}@mo-redrock.local`;
         }
 
+        function getMskDateKey(ts = Date.now()) {
+            const d = new Date(ts + 3 * 3600 * 1000);
+            return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+        }
+
+        function formatLogDate(ts) {
+            if (!ts) return '—';
+            const d = new Date(ts);
+            return `${d.toLocaleDateString('ru-RU')} ${d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+
         let state = {
             authMode: 'login',
             currentUser: null,
             questFilter: 'all',
             lbFilter: 'all',
+            logType: 'payouts',
             quests: [],
             rewards: [],
             submissions: [],
@@ -627,12 +672,18 @@
             seasonFormLoaded: false,
             season: {
                 name: 'Сезон Battle Pass МО',
+                expPerLevel: 100,
                 startDate: '',
                 endDate: '',
                 lockSubmissions: false,
                 announcement: ''
             }
         };
+
+        function getExpPerLevel() {
+            const val = Number(state.season.expPerLevel);
+            return val > 0 ? val : 100;
+        }
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -659,8 +710,7 @@
                 if (snap.exists()) {
                     state.season = { ...state.season, ...snap.data() };
                     state.seasonFormLoaded = false;
-                    updateSeasonUI();
-                    renderQuests();
+                    if (state.currentUser) renderAll();
                 }
             });
             onSnapshot(collection(db, 'quests'), (snap) => {
@@ -675,6 +725,7 @@
             });
             onSnapshot(query(collection(db, 'submissions'), orderBy('timestamp', 'desc')), (snap) => {
                 state.submissions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderQuests();
                 renderHistory();
                 renderAdminPanel();
             });
@@ -689,7 +740,6 @@
             });
         }
 
-        // ЛОГИКА ТАЙМЕРА СЕЗОНА
         function getSeasonStatus() {
             const now = Date.now();
             const startMs = state.season.startDate ? new Date(state.season.startDate).getTime() : null;
@@ -757,6 +807,7 @@
                 const cfgName = document.getElementById('cfg-season-name');
                 if (cfgName) {
                     cfgName.value = state.season.name || '';
+                    document.getElementById('cfg-exp-per-level').value = getExpPerLevel();
                     document.getElementById('cfg-season-start').value = state.season.startDate || '';
                     document.getElementById('cfg-season-end').value = state.season.endDate || '';
                     document.getElementById('cfg-season-lock').checked = !!state.season.lockSubmissions;
@@ -901,8 +952,10 @@
             document.getElementById('header-role-badge').classList.toggle('hidden', !isAdmin);
             document.getElementById('tab-btn-admin').classList.toggle('hidden', !isAdmin);
 
-            const level = Math.floor((u.exp || 0) / 100) + 1;
-            const currentLvlExp = (u.exp || 0) % 100;
+            const expPerLvl = getExpPerLevel();
+            const level = Math.floor((u.exp || 0) / expPerLvl) + 1;
+            const currentLvlExp = (u.exp || 0) % expPerLvl;
+            const percent = Math.min(100, Math.round((currentLvlExp / expPerLvl) * 100));
 
             document.getElementById('stat-level').textContent = level;
             document.getElementById('stat-nickname').textContent = u.nickname;
@@ -911,7 +964,8 @@
             document.getElementById('stat-total-exp').textContent = `${u.exp || 0} EXP`;
             document.getElementById('stat-claimed-count').textContent = (u.claimedLevels || []).length;
             document.getElementById('stat-current-lvl-exp').textContent = currentLvlExp;
-            document.getElementById('stat-progress-bar').style.width = `${currentLvlExp}%`;
+            document.getElementById('stat-exp-per-level').textContent = expPerLvl;
+            document.getElementById('stat-progress-bar').style.width = `${percent}%`;
 
             updateSeasonUI();
             renderBpTrack();
@@ -928,7 +982,8 @@
                 return;
             }
 
-            const userLevel = Math.floor((state.currentUser.exp || 0) / 100) + 1;
+            const expPerLvl = getExpPerLevel();
+            const userLevel = Math.floor((state.currentUser.exp || 0) / expPerLvl) + 1;
             const claimed = state.currentUser.claimedLevels || [];
 
             container.innerHTML = state.rewards.map(r => {
@@ -951,7 +1006,7 @@
                         <div>
                             <div class="flex justify-between items-center mb-3">
                                 <span class="text-xs font-black px-2 py-0.5 rounded bg-[#101114] text-amber-400 border border-[#272a33]">УРОВЕНЬ ${r.level}</span>
-                                <span class="text-[11px] text-gray-500">${(r.level - 1) * 100} EXP</span>
+                                <span class="text-[11px] text-gray-500">${(r.level - 1) * expPerLvl} EXP</span>
                             </div>
                             <div class="w-14 h-14 rounded-xl bg-[#101114] border border-[#272a33] mx-auto flex items-center justify-center text-2xl ${isUnlocked ? 'text-amber-400' : 'text-gray-600'} my-3">
                                 <i class="fa-solid ${r.icon || 'fa-gift'}"></i>
@@ -968,6 +1023,7 @@
 
         function renderQuests() {
             const grid = document.getElementById('quests-grid');
+            if (!state.currentUser) return;
             const filtered = state.quests.filter(q => state.questFilter === 'all' || q.type === state.questFilter);
 
             if (filtered.length === 0) {
@@ -977,16 +1033,25 @@
 
             const status = getSeasonStatus();
             const isLockedByTime = state.season.lockSubmissions && (status.phase === 'ended' || status.phase === 'upcoming');
+            const todayMsk = getMskDateKey();
 
             grid.innerHTML = filtered.map(q => {
                 const isOneTime = q.type === 'one_time';
-                const alreadyDone = isOneTime && state.submissions.some(s =>
+                const alreadyDoneOneTime = isOneTime && state.submissions.some(s =>
                     s.userId === state.currentUser.uid && s.questId === q.id && (s.status === 'pending' || s.status === 'approved')
+                );
+                const alreadyDoneToday = !isOneTime && state.submissions.some(s =>
+                    s.userId === state.currentUser.uid &&
+                    s.questId === q.id &&
+                    (s.status === 'pending' || s.status === 'approved') &&
+                    getMskDateKey(s.timestamp) === todayMsk
                 );
 
                 let actionBtn = `<button onclick="openSubmitModal('${q.id}')" class="w-full py-2 rounded-xl bg-[#22252e] hover:bg-amber-500 hover:text-black text-white text-xs font-bold transition">Сдать отчет</button>`;
-                if (alreadyDone) {
+                if (alreadyDoneOneTime) {
                     actionBtn = `<button disabled class="w-full py-2 rounded-xl bg-[#101114] text-gray-500 text-xs font-bold cursor-not-allowed">Выполнено / На проверке</button>`;
+                } else if (alreadyDoneToday) {
+                    actionBtn = `<button disabled class="w-full py-2 rounded-xl bg-[#101114] text-gray-500 text-xs font-bold cursor-not-allowed">Выполнено сегодня (сброс в 00:00 МСК)</button>`;
                 } else if (isLockedByTime) {
                     actionBtn = `<button disabled class="w-full py-2 rounded-xl bg-[#101114] text-red-400/70 text-xs font-bold cursor-not-allowed">${status.phase === 'ended' ? 'Сезон завершён' : 'Сезон ещё не начался'}</button>`;
                 }
@@ -1049,8 +1114,10 @@
                 return;
             }
 
+            const expPerLvl = getExpPerLevel();
+
             tbody.innerHTML = sorted.map((u, idx) => {
-                const lvl = Math.floor((u.exp || 0) / 100) + 1;
+                const lvl = Math.floor((u.exp || 0) / expPerLvl) + 1;
                 const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
                 const isMe = u.uid === state.currentUser.uid;
 
@@ -1206,9 +1273,108 @@
                     </tr>
                 `).join('');
 
+            renderAdminLogs();
             renderAdminUsers();
             renderAdminManage();
         }
+
+        window.switchLogType = (type) => {
+            state.logType = type;
+            document.getElementById('log-type-payouts').className = type === 'payouts'
+                ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black transition'
+                : 'px-3.5 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition';
+            document.getElementById('log-type-submissions').className = type === 'submissions'
+                ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black transition'
+                : 'px-3.5 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition';
+            renderAdminLogs();
+        };
+
+        window.renderAdminLogs = () => {
+            const thead = document.getElementById('admin-logs-thead');
+            const tbody = document.getElementById('admin-logs-tbody');
+            if (!thead || !tbody) return;
+
+            const search = (document.getElementById('admin-log-search')?.value || '').toLowerCase();
+            const paidPayouts = state.payouts
+                .filter(p => p.status === 'paid')
+                .sort((a, b) => (b.paidAt || b.timestamp || 0) - (a.paidAt || a.timestamp || 0));
+            const checkedSubs = state.submissions
+                .filter(s => s.status === 'approved' || s.status === 'rejected')
+                .sort((a, b) => (b.checkedAt || b.timestamp || 0) - (a.checkedAt || a.timestamp || 0));
+
+            document.getElementById('log-count-payouts').textContent = paidPayouts.length;
+            document.getElementById('log-count-submissions').textContent = checkedSubs.length;
+
+            if (state.logType === 'payouts') {
+                thead.innerHTML = `
+                    <tr>
+                        <th class="p-4">Дата выдачи</th>
+                        <th class="p-4">Боец</th>
+                        <th class="p-4">Уровень</th>
+                        <th class="p-4">Выданный приз</th>
+                        <th class="p-4">Выдал следящий</th>
+                    </tr>
+                `;
+                const filtered = paidPayouts.filter(p =>
+                    (p.nickname || '').toLowerCase().includes(search) ||
+                    (p.paidBy || '').toLowerCase().includes(search) ||
+                    (p.rewardTitle || '').toLowerCase().includes(search)
+                );
+                tbody.innerHTML = filtered.length === 0
+                    ? `<tr><td colspan="5" class="p-6 text-center text-gray-500 text-xs">Записей о выдаче призов пока нет.</td></tr>`
+                    : filtered.map(p => `
+                        <tr class="hover:bg-[#1a1d24]">
+                            <td class="p-4 text-xs text-gray-400 whitespace-nowrap">${formatLogDate(p.paidAt || p.timestamp)}</td>
+                            <td class="p-4 font-bold text-white">
+                                <span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-[#272a33] text-gray-300 mr-1.5">${p.faction}</span>
+                                ${p.nickname}
+                            </td>
+                            <td class="p-4 text-amber-400 font-bold">${p.level} ур.</td>
+                            <td class="p-4 text-emerald-400 font-semibold">${p.rewardTitle}</td>
+                            <td class="p-4 text-xs font-bold text-red-400">${p.paidBy || 'Следящий'}</td>
+                        </tr>
+                    `).join('');
+            } else {
+                thead.innerHTML = `
+                    <tr>
+                        <th class="p-4">Дата проверки</th>
+                        <th class="p-4">Боец</th>
+                        <th class="p-4">Задание / EXP</th>
+                        <th class="p-4">Док-ва</th>
+                        <th class="p-4">Вердикт</th>
+                        <th class="p-4">Проверил</th>
+                    </tr>
+                `;
+                const filtered = checkedSubs.filter(s =>
+                    (s.nickname || '').toLowerCase().includes(search) ||
+                    (s.checkedBy || '').toLowerCase().includes(search) ||
+                    (s.questTitle || '').toLowerCase().includes(search)
+                );
+                tbody.innerHTML = filtered.length === 0
+                    ? `<tr><td colspan="6" class="p-6 text-center text-gray-500 text-xs">Проверенных отчетов пока нет.</td></tr>`
+                    : filtered.map(s => `
+                        <tr class="hover:bg-[#1a1d24]">
+                            <td class="p-4 text-xs text-gray-400 whitespace-nowrap">${formatLogDate(s.checkedAt || s.timestamp)}</td>
+                            <td class="p-4 font-bold text-white">
+                                <span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-[#272a33] text-gray-300 mr-1.5">${s.faction}</span>
+                                ${s.nickname}
+                            </td>
+                            <td class="p-4">
+                                <div class="text-white font-semibold">${s.questTitle}</div>
+                                <div class="text-xs text-amber-400 font-bold">+${s.rewardExp} EXP</div>
+                            </td>
+                            <td class="p-4"><a href="${s.proofUrl}" target="_blank" class="text-blue-400 hover:underline text-xs">Ссылка</a></td>
+                            <td class="p-4">
+                                ${s.status === 'approved'
+                                    ? `<span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400">Одобрено</span>`
+                                    : `<span class="px-2 py-0.5 rounded text-xs font-bold bg-red-500/20 text-red-400" title="${s.rejectReason || ''}">Отказ: ${s.rejectReason || '—'}</span>`
+                                }
+                            </td>
+                            <td class="p-4 text-xs font-bold text-red-400">${s.checkedBy || 'Следящий'}</td>
+                        </tr>
+                    `).join('');
+            }
+        };
 
         window.renderAdminUsers = () => {
             const search = (document.getElementById('admin-user-search')?.value || '').toLowerCase();
@@ -1283,15 +1449,17 @@
 
         window.adminSaveSeasonSettings = async (e) => {
             e.preventDefault();
+            const expPerLevel = Math.max(10, Number(document.getElementById('cfg-exp-per-level').value) || 100);
             const payload = {
                 name: document.getElementById('cfg-season-name').value.trim() || 'Сезон Battle Pass МО',
+                expPerLevel,
                 startDate: document.getElementById('cfg-season-start').value,
                 endDate: document.getElementById('cfg-season-end').value,
                 lockSubmissions: document.getElementById('cfg-season-lock').checked,
                 announcement: document.getElementById('cfg-season-announcement').value.trim()
             };
             await setDoc(doc(db, 'settings', 'season'), payload);
-            showToast('Настройки сезона сохранены!', 'success');
+            showToast('Настройки сезона и EXP за уровень сохранены!', 'success');
         };
 
         window.seedDefaultData = async () => {
@@ -1361,7 +1529,11 @@
         window.adminApproveSub = async (subId) => {
             const sub = state.submissions.find(s => s.id === subId);
             if (!sub) return;
-            await updateDoc(doc(db, 'submissions', subId), { status: 'approved' });
+            await updateDoc(doc(db, 'submissions', subId), {
+                status: 'approved',
+                checkedBy: state.currentUser.nickname,
+                checkedAt: Date.now()
+            });
             await updateDoc(doc(db, 'users', sub.userId), { exp: increment(sub.rewardExp) });
             showToast(`Отчет одобрен (+${sub.rewardExp} EXP)`, 'success');
         };
@@ -1369,13 +1541,22 @@
         window.adminRejectSub = async (subId) => {
             const reason = prompt('Причина отказа:', 'Нет /time или боди-камеры');
             if (reason === null) return;
-            await updateDoc(doc(db, 'submissions', subId), { status: 'rejected', rejectReason: reason });
+            await updateDoc(doc(db, 'submissions', subId), {
+                status: 'rejected',
+                rejectReason: reason,
+                checkedBy: state.currentUser.nickname,
+                checkedAt: Date.now()
+            });
             showToast('Отчет отклонен', 'info');
         };
 
         window.adminMarkPaid = async (payId) => {
-            await updateDoc(doc(db, 'payouts', payId), { status: 'paid' });
-            showToast('Отмечено как выданное!', 'success');
+            await updateDoc(doc(db, 'payouts', payId), {
+                status: 'paid',
+                paidBy: state.currentUser.nickname,
+                paidAt: Date.now()
+            });
+            showToast('Приз отмечен как выданный и занесен в логи!', 'success');
         };
 
         window.adminAddQuest = async (e) => {
@@ -1434,7 +1615,7 @@
         };
 
         window.switchAdminSubtab = (sub) => {
-            ['registrations', 'pending', 'payouts', 'users', 'manage', 'season'].forEach(s => {
+            ['registrations', 'pending', 'payouts', 'logs', 'users', 'manage', 'season'].forEach(s => {
                 document.getElementById(`admin-panel-${s}`).classList.add('hidden');
                 document.getElementById(`adm-sub-${s}`).className = 'px-3.5 py-2 rounded-xl text-xs font-bold bg-[#181a20] text-gray-300 hover:text-white border border-[#272a33]';
             });
