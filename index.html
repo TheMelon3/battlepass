@@ -365,7 +365,7 @@
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="border-b border-[#272a33] bg-[#121317] text-xs uppercase text-gray-400">
-                                        <th class="p-4">Игрок</th>
+                                        <th class="p-4">Игрок (клик — копировать)</th>
                                         <th class="p-4">Фракция</th>
                                         <th class="p-4">Уровень</th>
                                         <th class="p-4">Награда к выдаче</th>
@@ -624,6 +624,7 @@
             submissions: [],
             payouts: [],
             allUsers: [],
+            seasonFormLoaded: false,
             season: {
                 name: 'Сезон Battle Pass МО',
                 startDate: '',
@@ -657,6 +658,7 @@
             onSnapshot(doc(db, 'settings', 'season'), (snap) => {
                 if (snap.exists()) {
                     state.season = { ...state.season, ...snap.data() };
+                    state.seasonFormLoaded = false;
                     updateSeasonUI();
                     renderQuests();
                 }
@@ -751,13 +753,16 @@
                 datesEl.textContent = '';
             }
 
-            const cfgName = document.getElementById('cfg-season-name');
-            if (cfgName && document.activeElement !== cfgName) {
-                cfgName.value = state.season.name || '';
-                document.getElementById('cfg-season-start').value = state.season.startDate || '';
-                document.getElementById('cfg-season-end').value = state.season.endDate || '';
-                document.getElementById('cfg-season-lock').checked = !!state.season.lockSubmissions;
-                document.getElementById('cfg-season-announcement').value = state.season.announcement || '';
+            if (!state.seasonFormLoaded) {
+                const cfgName = document.getElementById('cfg-season-name');
+                if (cfgName) {
+                    cfgName.value = state.season.name || '';
+                    document.getElementById('cfg-season-start').value = state.season.startDate || '';
+                    document.getElementById('cfg-season-end').value = state.season.endDate || '';
+                    document.getElementById('cfg-season-lock').checked = !!state.season.lockSubmissions;
+                    document.getElementById('cfg-season-announcement').value = state.season.announcement || '';
+                    state.seasonFormLoaded = true;
+                }
             }
         }
 
