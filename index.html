@@ -216,8 +216,8 @@
                     <!-- Шкала уровня -->
                     <div class="flex-1 max-w-md">
                         <div class="flex justify-between text-xs font-bold mb-1.5">
-                            <span class="text-gray-400">Прогресс уровня</span>
-                            <span class="text-amber-400"><span id="stat-current-lvl-exp">0</span> / <span id="stat-exp-per-level">100</span> EXP</span>
+                            <span class="text-gray-400" id="stat-progress-label">Прогресс до следующего уровня</span>
+                            <span class="text-amber-400" id="stat-progress-text">0 / 100 EXP</span>
                         </div>
                         <div class="w-full h-3.5 bg-[#101114] rounded-full overflow-hidden border border-[#272a33] p-0.5">
                             <div id="stat-progress-bar" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500" style="width: 0%"></div>
@@ -462,11 +462,24 @@
                         </div>
 
                         <div class="card-glass rounded-2xl p-5 space-y-4">
-                            <h4 class="font-bold text-white text-base"><i class="fa-solid fa-layer-group text-amber-500 mr-2"></i>Добавить / Изменить уровень БП</h4>
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-bold text-white text-base" id="reward-form-heading"><i class="fa-solid fa-layer-group text-amber-500 mr-2"></i>Добавить / Изменить уровень БП</h4>
+                                <button type="button" id="cancel-edit-reward-btn" onclick="cancelEditReward()" class="hidden text-xs text-gray-400 hover:text-white underline">Отмена</button>
+                            </div>
                             <form onsubmit="adminSaveReward(event)" class="space-y-3">
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <input type="number" id="new-r-level" required min="1" placeholder="Уровень (1..50)" class="w-full px-3 py-2 rounded-lg bg-[#101114] border border-[#272a33] text-sm text-white">
-                                    <input type="text" id="new-r-title" list="reward-presets" required placeholder="Впишите любую награду..." class="sm:col-span-2 w-full px-3 py-2 rounded-lg bg-[#101114] border border-[#272a33] text-sm text-white focus:border-emerald-500 focus:outline-none">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-gray-400 uppercase mb-1">Номер уровня</label>
+                                        <input type="number" id="new-r-level" required min="1" placeholder="1..50" class="w-full px-3 py-2 rounded-lg bg-[#101114] border border-[#272a33] text-sm text-white focus:border-emerald-500 focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-amber-400 uppercase mb-1">Требуемый общий EXP</label>
+                                        <input type="number" id="new-r-exp" required min="0" placeholder="Например: 100" class="w-full px-3 py-2 rounded-lg bg-[#101114] border border-[#272a33] text-sm text-white focus:border-emerald-500 focus:outline-none">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-gray-400 uppercase mb-1">Награда за уровень</label>
+                                    <input type="text" id="new-r-title" list="reward-presets" required placeholder="Впишите любую награду..." class="w-full px-3 py-2 rounded-lg bg-[#101114] border border-[#272a33] text-sm text-white focus:border-emerald-500 focus:outline-none">
                                     <datalist id="reward-presets">
                                         <option value="$1.000.000">
                                         <option value="$3.000.000">
@@ -476,7 +489,7 @@
                                         <option value="Внеочередное повышение">
                                     </datalist>
                                 </div>
-                                <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm transition">Сохранить уровень</button>
+                                <button type="submit" id="save-reward-btn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm transition">Сохранить уровень</button>
                             </form>
 
                             <div class="pt-3 border-t border-[#272a33] space-y-2 max-h-80 overflow-y-auto" id="admin-rewards-manage-list"></div>
@@ -487,17 +500,11 @@
                 <!-- 5.7 НАСТРОЙКИ СЕЗОНА И ПРАВИЛ -->
                 <div id="admin-panel-season" class="hidden max-w-2xl">
                     <div class="card-glass rounded-2xl p-6 space-y-4">
-                        <h4 class="font-bold text-white text-base"><i class="fa-solid fa-calendar-check text-amber-500 mr-2"></i>Настройки сроков, EXP за уровень и объявлений</h4>
+                        <h4 class="font-bold text-white text-base"><i class="fa-solid fa-calendar-check text-amber-500 mr-2"></i>Настройки сроков Battle Pass и объявлений</h4>
                         <form onsubmit="adminSaveSeasonSettings(event)" class="space-y-4">
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div class="sm:col-span-2">
-                                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Название сезона</label>
-                                    <input type="text" id="cfg-season-name" placeholder="Зимний призыв 2026" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-amber-400 uppercase mb-1">EXP за 1 уровень</label>
-                                    <input type="number" id="cfg-exp-per-level" min="10" max="10000" required placeholder="100" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none">
-                                </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Название сезона</label>
+                                <input type="text" id="cfg-season-name" placeholder="Зимний призыв 2026" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none">
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -672,7 +679,6 @@
             seasonFormLoaded: false,
             season: {
                 name: 'Сезон Battle Pass МО',
-                expPerLevel: 100,
                 startDate: '',
                 endDate: '',
                 lockSubmissions: false,
@@ -680,9 +686,66 @@
             }
         };
 
-        function getExpPerLevel() {
-            const val = Number(state.season.expPerLevel);
-            return val > 0 ? val : 100;
+        // Получаем requiredExp для конкретного уровня (если не задан в базе — берем (level - 1) * 100)
+        function getRewardReqExp(reward) {
+            if (reward && typeof reward.requiredExp === 'number' && !isNaN(reward.requiredExp)) {
+                return Math.max(0, reward.requiredExp);
+            }
+            return Math.max(0, ((reward?.level || 1) - 1) * 100);
+        }
+
+        // Расчет текущего уровня игрока и прогресса до следующего на основе заданных уровней
+        function calculatePlayerProgress(exp = 0) {
+            const safeExp = Math.max(0, Number(exp) || 0);
+            const sorted = [...state.rewards].sort((a, b) => a.level - b.level);
+
+            if (sorted.length === 0) {
+                const level = Math.floor(safeExp / 100) + 1;
+                const current = safeExp % 100;
+                return {
+                    level,
+                    currentExp: safeExp,
+                    nextReqExp: level * 100,
+                    percent: current,
+                    isMax: false
+                };
+            }
+
+            let currentLvl = 1;
+            let prevReq = 0;
+
+            for (const r of sorted) {
+                const req = getRewardReqExp(r);
+                if (safeExp >= req) {
+                    currentLvl = Math.max(currentLvl, r.level);
+                    prevReq = req;
+                }
+            }
+
+            const nextReward = sorted.find(r => getRewardReqExp(r) > safeExp);
+            if (!nextReward) {
+                return {
+                    level: currentLvl,
+                    currentExp: safeExp,
+                    nextReqExp: null,
+                    percent: 100,
+                    isMax: true
+                };
+            }
+
+            const nextReq = getRewardReqExp(nextReward);
+            const span = Math.max(1, nextReq - prevReq);
+            const gained = Math.max(0, safeExp - prevReq);
+            const percent = Math.min(100, Math.round((gained / span) * 100));
+
+            return {
+                level: currentLvl,
+                currentExp: safeExp,
+                nextReqExp: nextReq,
+                nextLevel: nextReward.level,
+                percent,
+                isMax: false
+            };
         }
 
         onAuthStateChanged(auth, async (user) => {
@@ -720,7 +783,7 @@
             });
             onSnapshot(query(collection(db, 'rewards'), orderBy('level', 'asc')), (snap) => {
                 state.rewards = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderBpTrack();
+                if (state.currentUser) renderAll();
                 renderAdminManage();
             });
             onSnapshot(query(collection(db, 'submissions'), orderBy('timestamp', 'desc')), (snap) => {
@@ -807,7 +870,6 @@
                 const cfgName = document.getElementById('cfg-season-name');
                 if (cfgName) {
                     cfgName.value = state.season.name || '';
-                    document.getElementById('cfg-exp-per-level').value = getExpPerLevel();
                     document.getElementById('cfg-season-start').value = state.season.startDate || '';
                     document.getElementById('cfg-season-end').value = state.season.endDate || '';
                     document.getElementById('cfg-season-lock').checked = !!state.season.lockSubmissions;
@@ -952,20 +1014,23 @@
             document.getElementById('header-role-badge').classList.toggle('hidden', !isAdmin);
             document.getElementById('tab-btn-admin').classList.toggle('hidden', !isAdmin);
 
-            const expPerLvl = getExpPerLevel();
-            const level = Math.floor((u.exp || 0) / expPerLvl) + 1;
-            const currentLvlExp = (u.exp || 0) % expPerLvl;
-            const percent = Math.min(100, Math.round((currentLvlExp / expPerLvl) * 100));
+            const prog = calculatePlayerProgress(u.exp || 0);
 
-            document.getElementById('stat-level').textContent = level;
+            document.getElementById('stat-level').textContent = prog.level;
             document.getElementById('stat-nickname').textContent = u.nickname;
             document.getElementById('stat-faction-badge').textContent = u.faction;
             document.getElementById('stat-rank-badge').textContent = u.rank || 'Боец';
             document.getElementById('stat-total-exp').textContent = `${u.exp || 0} EXP`;
             document.getElementById('stat-claimed-count').textContent = (u.claimedLevels || []).length;
-            document.getElementById('stat-current-lvl-exp').textContent = currentLvlExp;
-            document.getElementById('stat-exp-per-level').textContent = expPerLvl;
-            document.getElementById('stat-progress-bar').style.width = `${percent}%`;
+
+            if (prog.isMax) {
+                document.getElementById('stat-progress-label').textContent = 'Максимальный уровень сезона';
+                document.getElementById('stat-progress-text').textContent = `${prog.currentExp} EXP (MAX)`;
+            } else {
+                document.getElementById('stat-progress-label').textContent = prog.nextLevel ? `До ${prog.nextLevel} уровня` : 'Прогресс уровня';
+                document.getElementById('stat-progress-text').textContent = `${prog.currentExp} / ${prog.nextReqExp} EXP`;
+            }
+            document.getElementById('stat-progress-bar').style.width = `${prog.percent}%`;
 
             updateSeasonUI();
             renderBpTrack();
@@ -982,16 +1047,16 @@
                 return;
             }
 
-            const expPerLvl = getExpPerLevel();
-            const userLevel = Math.floor((state.currentUser.exp || 0) / expPerLvl) + 1;
+            const userExp = Number(state.currentUser.exp) || 0;
             const claimed = state.currentUser.claimedLevels || [];
 
             container.innerHTML = state.rewards.map(r => {
-                const isUnlocked = userLevel >= r.level;
+                const reqExp = getRewardReqExp(r);
+                const isUnlocked = userExp >= reqExp;
                 const isClaimed = claimed.includes(r.level);
 
                 let cardStyle = 'border-[#272a33] bg-[#16181d] opacity-75';
-                let btnHtml = `<div class="w-full py-2 rounded-lg bg-[#101114] text-gray-500 text-xs font-bold text-center"><i class="fa-solid fa-lock mr-1"></i>Нужен ${r.level} ур.</div>`;
+                let btnHtml = `<div class="w-full py-2 rounded-lg bg-[#101114] text-gray-500 text-xs font-bold text-center"><i class="fa-solid fa-lock mr-1"></i>Нужно ${reqExp} EXP</div>`;
 
                 if (isClaimed) {
                     cardStyle = 'border-emerald-500/40 bg-emerald-950/10';
@@ -1006,7 +1071,7 @@
                         <div>
                             <div class="flex justify-between items-center mb-3">
                                 <span class="text-xs font-black px-2 py-0.5 rounded bg-[#101114] text-amber-400 border border-[#272a33]">УРОВЕНЬ ${r.level}</span>
-                                <span class="text-[11px] text-gray-500">${(r.level - 1) * expPerLvl} EXP</span>
+                                <span class="text-[11px] font-bold text-gray-400">${reqExp} EXP</span>
                             </div>
                             <div class="w-14 h-14 rounded-xl bg-[#101114] border border-[#272a33] mx-auto flex items-center justify-center text-2xl ${isUnlocked ? 'text-amber-400' : 'text-gray-600'} my-3">
                                 <i class="fa-solid ${r.icon || 'fa-gift'}"></i>
@@ -1114,10 +1179,8 @@
                 return;
             }
 
-            const expPerLvl = getExpPerLevel();
-
             tbody.innerHTML = sorted.map((u, idx) => {
-                const lvl = Math.floor((u.exp || 0) / expPerLvl) + 1;
+                const lvl = calculatePlayerProgress(u.exp || 0).level;
                 const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
                 const isMe = u.uid === state.currentUser.uid;
 
@@ -1435,31 +1498,61 @@
                 </div>
             `).join('');
 
-            rList.innerHTML = state.rewards.map(r => `
-                <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-xs">
-                    <div>
-                        <span class="font-bold text-amber-400">Ур. ${r.level}:</span> <b class="text-white">${r.title}</b>
+            rList.innerHTML = state.rewards.map(r => {
+                const reqExp = getRewardReqExp(r);
+                return `
+                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-xs">
+                        <div class="min-w-0">
+                            <span class="font-bold text-amber-400">Ур. ${r.level}</span>
+                            <span class="text-gray-400 font-semibold">(${reqExp} EXP):</span>
+                            <b class="text-white ml-1">${r.title}</b>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button onclick="adminEditReward(${r.level})" title="Редактировать уровень" class="px-2.5 py-1.5 rounded bg-sky-500/20 text-sky-400 hover:bg-sky-500 hover:text-black font-bold transition">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="adminDeleteReward('${r.id || 'lvl_' + r.level}', ${r.level})" title="Удалить уровень" class="px-2.5 py-1.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white font-bold transition">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
-                    <button onclick="adminDeleteReward('${r.id || 'lvl_' + r.level}', ${r.level})" class="px-2.5 py-1.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white font-bold">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
+
+        window.adminEditReward = (level) => {
+            const reward = state.rewards.find(r => r.level === level);
+            if (!reward) return;
+            document.getElementById('new-r-level').value = reward.level;
+            document.getElementById('new-r-exp').value = getRewardReqExp(reward);
+            document.getElementById('new-r-title').value = reward.title;
+
+            document.getElementById('reward-form-heading').innerHTML = `<i class="fa-solid fa-pen text-sky-400 mr-2"></i>Редактирование уровня ${reward.level}`;
+            document.getElementById('save-reward-btn').textContent = `Обновить уровень ${reward.level}`;
+            document.getElementById('cancel-edit-reward-btn').classList.remove('hidden');
+            document.getElementById('new-r-exp').focus();
+        };
+
+        window.cancelEditReward = () => {
+            document.getElementById('new-r-level').value = '';
+            document.getElementById('new-r-exp').value = '';
+            document.getElementById('new-r-title').value = '';
+            document.getElementById('reward-form-heading').innerHTML = `<i class="fa-solid fa-layer-group text-amber-500 mr-2"></i>Добавить / Изменить уровень БП`;
+            document.getElementById('save-reward-btn').textContent = 'Сохранить уровень';
+            document.getElementById('cancel-edit-reward-btn').classList.add('hidden');
+        };
 
         window.adminSaveSeasonSettings = async (e) => {
             e.preventDefault();
-            const expPerLevel = Math.max(10, Number(document.getElementById('cfg-exp-per-level').value) || 100);
             const payload = {
                 name: document.getElementById('cfg-season-name').value.trim() || 'Сезон Battle Pass МО',
-                expPerLevel,
                 startDate: document.getElementById('cfg-season-start').value,
                 endDate: document.getElementById('cfg-season-end').value,
                 lockSubmissions: document.getElementById('cfg-season-lock').checked,
                 announcement: document.getElementById('cfg-season-announcement').value.trim()
             };
             await setDoc(doc(db, 'settings', 'season'), payload);
-            showToast('Настройки сезона и EXP за уровень сохранены!', 'success');
+            showToast('Настройки сезона сохранены!', 'success');
         };
 
         window.seedDefaultData = async () => {
@@ -1470,16 +1563,16 @@
                 { title: 'Карьерный рост', description: 'Повыситься до 5-го ранга во время действия сезона.', rewardExp: 100, type: 'one_time' }
             ];
             const defaultRewards = [
-                { level: 1, title: '$500.000', icon: 'fa-gift' },
-                { level: 2, title: 'Ларец с премией (2 шт)', icon: 'fa-gift' },
-                { level: 3, title: '$1.000.000', icon: 'fa-gift' },
-                { level: 4, title: 'Похвала от лидера', icon: 'fa-gift' },
-                { level: 5, title: 'Снятие 1 выговора', icon: 'fa-gift' },
-                { level: 6, title: '$2.500.000', icon: 'fa-gift' },
-                { level: 7, title: 'Похвала от лидера (2 шт)', icon: 'fa-gift' },
-                { level: 8, title: '$4.000.000', icon: 'fa-gift' },
-                { level: 9, title: 'Снятие 1 выговора', icon: 'fa-gift' },
-                { level: 10, title: 'ГЛАВНЫЙ ПРИЗ: $10.000.000', icon: 'fa-gift' }
+                { level: 1, requiredExp: 50, title: '$500.000', icon: 'fa-gift' },
+                { level: 2, requiredExp: 100, title: 'Ларец с премией (2 шт)', icon: 'fa-gift' },
+                { level: 3, requiredExp: 200, title: '$1.000.000', icon: 'fa-gift' },
+                { level: 4, requiredExp: 300, title: 'Похвала от лидера', icon: 'fa-gift' },
+                { level: 5, requiredExp: 450, title: 'Снятие 1 выговора', icon: 'fa-gift' },
+                { level: 6, requiredExp: 600, title: '$2.500.000', icon: 'fa-gift' },
+                { level: 7, requiredExp: 800, title: 'Похвала от лидера (2 шт)', icon: 'fa-gift' },
+                { level: 8, requiredExp: 1000, title: '$4.000.000', icon: 'fa-gift' },
+                { level: 9, requiredExp: 1250, title: 'Снятие 1 выговора', icon: 'fa-gift' },
+                { level: 10, requiredExp: 1500, title: 'ГЛАВНЫЙ ПРИЗ: $10.000.000', icon: 'fa-gift' }
             ];
 
             for (const q of defaultQuests) await addDoc(collection(db, 'quests'), q);
@@ -1580,13 +1673,15 @@
         window.adminSaveReward = async (e) => {
             e.preventDefault();
             const level = Number(document.getElementById('new-r-level').value);
+            const requiredExp = Math.max(0, Number(document.getElementById('new-r-exp').value) || 0);
             await setDoc(doc(db, 'rewards', `lvl_${level}`), {
                 level,
+                requiredExp,
                 title: document.getElementById('new-r-title').value.trim(),
                 icon: 'fa-gift'
             });
-            e.target.reset();
-            showToast(`Уровень ${level} сохранен!`, 'success');
+            cancelEditReward();
+            showToast(`Уровень ${level} (${requiredExp} EXP) сохранен!`, 'success');
         };
 
         window.adminDeleteReward = async (docId, level) => {
