@@ -437,18 +437,18 @@
                         <div class="card-glass rounded-2xl p-5 space-y-4">
                             <h4 class="font-bold text-white text-base"><i class="fa-solid fa-layer-group text-amber-500 mr-2"></i>Добавить / Изменить уровень БП</h4>
                             <form onsubmit="adminSaveReward(event)" class="space-y-3">
-                                <div class="grid grid-cols-2 gap-3">
-                                    <input type="number" id="new-r-level" required min="1" placeholder="Номер уровня (1..50)" class="w-full px-3 py-2 rounded-lg bg-[#101114] border border-[#272a33] text-sm text-white">
-                                    <select id="new-r-icon" class="w-full px-3 py-2 rounded-lg bg-[#101114] border border-[#272a33] text-sm text-white">
-                                        <option value="fa-sack-dollar">Деньги (Мешок)</option>
-                                        <option value="fa-file-shield">Снятие выговора</option>
-                                        <option value="fa-medal">Похвала от лидера</option>
-                                        <option value="fa-box-open">Ларец / Рулетка</option>
-                                        <option value="fa-vest">Аксессуар / Скин</option>
-                                        <option value="fa-crown">Главный приз</option>
-                                    </select>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <input type="number" id="new-r-level" required min="1" placeholder="Уровень (1..50)" class="w-full px-3 py-2 rounded-lg bg-[#101114] border border-[#272a33] text-sm text-white">
+                                    <input type="text" id="new-r-title" list="reward-presets" required placeholder="Впишите любую награду..." class="sm:col-span-2 w-full px-3 py-2 rounded-lg bg-[#101114] border border-[#272a33] text-sm text-white focus:border-emerald-500 focus:outline-none">
+                                    <datalist id="reward-presets">
+                                        <option value="$1.000.000">
+                                        <option value="$3.000.000">
+                                        <option value="Снятие 1 выговора">
+                                        <option value="Похвала от лидера">
+                                        <option value="Ларец с премией">
+                                        <option value="Внеочередное повышение">
+                                    </datalist>
                                 </div>
-                                <input type="text" id="new-r-title" required placeholder="Название приза (например: $3.000.000)" class="w-full px-3 py-2 rounded-lg bg-[#101114] border border-[#272a33] text-sm text-white">
                                 <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm transition">Сохранить уровень</button>
                             </form>
 
@@ -751,7 +751,6 @@
                 datesEl.textContent = '';
             }
 
-            // Заполняем поля в админке, если пользователь не печатает в них прямо сейчас
             const cfgName = document.getElementById('cfg-season-name');
             if (cfgName && document.activeElement !== cfgName) {
                 cfgName.value = state.season.name || '';
@@ -1298,16 +1297,16 @@
                 { title: 'Карьерный рост', description: 'Повыситься до 5-го ранга во время действия сезона.', rewardExp: 100, type: 'one_time' }
             ];
             const defaultRewards = [
-                { level: 1, title: '$500.000', icon: 'fa-sack-dollar' },
-                { level: 2, title: 'Ларец с премией (2 шт)', icon: 'fa-box-open' },
-                { level: 3, title: '$1.000.000', icon: 'fa-sack-dollar' },
-                { level: 4, title: 'Похвала от лидера', icon: 'fa-medal' },
-                { level: 5, title: 'Снятие 1 выговора', icon: 'fa-file-shield' },
-                { level: 6, title: '$2.500.000', icon: 'fa-sack-dollar' },
-                { level: 7, title: 'Похвала от лидера (2 шт)', icon: 'fa-medal' },
-                { level: 8, title: '$4.000.000', icon: 'fa-sack-dollar' },
-                { level: 9, title: 'Снятие 1 выговора', icon: 'fa-file-shield' },
-                { level: 10, title: 'ГЛАВНЫЙ ПРИЗ: $10.000.000', icon: 'fa-crown' }
+                { level: 1, title: '$500.000', icon: 'fa-gift' },
+                { level: 2, title: 'Ларец с премией (2 шт)', icon: 'fa-gift' },
+                { level: 3, title: '$1.000.000', icon: 'fa-gift' },
+                { level: 4, title: 'Похвала от лидера', icon: 'fa-gift' },
+                { level: 5, title: 'Снятие 1 выговора', icon: 'fa-gift' },
+                { level: 6, title: '$2.500.000', icon: 'fa-gift' },
+                { level: 7, title: 'Похвала от лидера (2 шт)', icon: 'fa-gift' },
+                { level: 8, title: '$4.000.000', icon: 'fa-gift' },
+                { level: 9, title: 'Снятие 1 выговора', icon: 'fa-gift' },
+                { level: 10, title: 'ГЛАВНЫЙ ПРИЗ: $10.000.000', icon: 'fa-gift' }
             ];
 
             for (const q of defaultQuests) await addDoc(collection(db, 'quests'), q);
@@ -1398,7 +1397,7 @@
             await setDoc(doc(db, 'rewards', `lvl_${level}`), {
                 level,
                 title: document.getElementById('new-r-title').value.trim(),
-                icon: document.getElementById('new-r-icon').value
+                icon: 'fa-gift'
             });
             e.target.reset();
             showToast(`Уровень ${level} сохранен!`, 'success');
