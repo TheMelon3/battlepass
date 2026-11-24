@@ -191,9 +191,10 @@
         <!-- РАБОЧАЯ ОБЛАСТЬ ПРИЛОЖЕНИЯ -->
         <div id="app-content" class="hidden space-y-6">
 
-            <!-- КАРТОЧКА ПРОГРЕССА -->
+            <!-- КАРТОЧКА ПРОГРЕССА + ТАЙМЕР СЕЗОНА -->
             <div class="card-glass rounded-2xl p-5 sm:p-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <!-- Профиль бойца -->
                     <div class="flex items-center gap-4">
                         <div class="w-16 h-16 rounded-2xl bg-[#1e2128] border-2 border-amber-500 flex flex-col items-center justify-center shrink-0 glow-gold">
                             <span class="text-[10px] font-bold text-amber-400 uppercase">LVL</span>
@@ -212,16 +213,35 @@
                         </div>
                     </div>
 
-                    <div class="flex-1 max-w-xl">
+                    <!-- Шкала уровня -->
+                    <div class="flex-1 max-w-md">
                         <div class="flex justify-between text-xs font-bold mb-1.5">
-                            <span class="text-gray-400">Прогресс до следующего уровня</span>
+                            <span class="text-gray-400">Прогресс уровня</span>
                             <span class="text-amber-400"><span id="stat-current-lvl-exp">0</span> / 100 EXP</span>
                         </div>
                         <div class="w-full h-3.5 bg-[#101114] rounded-full overflow-hidden border border-[#272a33] p-0.5">
                             <div id="stat-progress-bar" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
+
+                    <!-- Таймер сезона -->
+                    <div id="season-timer-box" class="bg-[#101114] border border-[#272a33] rounded-xl px-4 py-3 shrink-0 min-w-[230px]">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span id="season-display-name" class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Сезон активен</span>
+                            <i class="fa-regular fa-clock text-gray-500 text-xs"></i>
+                        </div>
+                        <div id="season-countdown-text" class="font-hud text-xl font-black text-white tracking-wide">
+                            Сроки не заданы
+                        </div>
+                        <div id="season-dates-sub" class="text-[10px] text-gray-500 mt-0.5"></div>
+                    </div>
                 </div>
+            </div>
+
+            <!-- БАННЕР ОБЪЯВЛЕНИЯ / ПРАВИЛ СЕЗОНА -->
+            <div id="season-announcement-banner" class="hidden card-glass rounded-2xl p-4 border border-sky-500/30 bg-sky-950/10 flex items-start gap-3">
+                <i class="fa-solid fa-bullhorn text-sky-400 mt-0.5"></i>
+                <div class="text-xs text-gray-300 leading-relaxed whitespace-pre-line" id="season-announcement-text"></div>
             </div>
 
             <!-- ВКЛАДКА 1: ЛЕНТА НАГРАД -->
@@ -276,9 +296,17 @@
                 </div>
             </section>
 
-            <!-- ВКЛАДКА 4: ТОП БОЙЦОВ (БЕЗ АДМИНОВ) -->
+            <!-- ВКЛАДКА 4: ТОП БОЙЦОВ (БЕЗ АДМИНОВ, С ФИЛЬТРОМ ПО ФРАКЦИЯМ) -->
             <section id="view-leaderboard" class="hidden space-y-4">
-                <h3 class="text-lg font-bold text-white">Рейтинг военнослужащих МО</h3>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="text-lg font-bold text-white">Рейтинг военнослужащих МО</h3>
+                    <div class="flex gap-1.5 bg-[#16181d] p-1 rounded-xl border border-[#272a33]">
+                        <button onclick="filterLeaderboard('all')" id="lb-filter-all" class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500 text-black">Все МО</button>
+                        <button onclick="filterLeaderboard('ЛСа')" id="lb-filter-ЛСа" class="px-3 py-1 rounded-lg text-xs font-bold text-gray-400 hover:text-white">ЛСа</button>
+                        <button onclick="filterLeaderboard('СФа')" id="lb-filter-СФа" class="px-3 py-1 rounded-lg text-xs font-bold text-gray-400 hover:text-white">СФа</button>
+                        <button onclick="filterLeaderboard('ТСР')" id="lb-filter-ТСР" class="px-3 py-1 rounded-lg text-xs font-bold text-gray-400 hover:text-white">ТСР</button>
+                    </div>
+                </div>
                 <div class="card-glass rounded-2xl overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
@@ -315,6 +343,9 @@
                     <button onclick="switchAdminSubtab('manage')" id="adm-sub-manage" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#181a20] text-gray-300 hover:text-white border border-[#272a33]">
                         <i class="fa-solid fa-sliders mr-1.5"></i>Конструктор БП
                     </button>
+                    <button onclick="switchAdminSubtab('season')" id="adm-sub-season" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#181a20] text-gray-300 hover:text-white border border-[#272a33]">
+                        <i class="fa-solid fa-calendar-days mr-1.5"></i>Сезон и правила
+                    </button>
                 </div>
 
                 <!-- 5.1 Регистрации -->
@@ -334,7 +365,7 @@
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="border-b border-[#272a33] bg-[#121317] text-xs uppercase text-gray-400">
-                                        <th class="p-4">Игрок</th>
+                                        <th class="p-4">Игрок (клик — копировать)</th>
                                         <th class="p-4">Фракция</th>
                                         <th class="p-4">Уровень</th>
                                         <th class="p-4">Награда к выдаче</th>
@@ -423,6 +454,44 @@
 
                             <div class="pt-3 border-t border-[#272a33] space-y-2 max-h-80 overflow-y-auto" id="admin-rewards-manage-list"></div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- 5.6 НАСТРОЙКИ СЕЗОНА И ПРАВИЛ -->
+                <div id="admin-panel-season" class="hidden max-w-2xl">
+                    <div class="card-glass rounded-2xl p-6 space-y-4">
+                        <h4 class="font-bold text-white text-base"><i class="fa-solid fa-calendar-check text-amber-500 mr-2"></i>Настройки сроков Battle Pass и объявлений</h4>
+                        <form onsubmit="adminSaveSeasonSettings(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Название сезона</label>
+                                <input type="text" id="cfg-season-name" placeholder="Зимний призыв 2026" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none">
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Дата и время начала</label>
+                                    <input type="datetime-local" id="cfg-season-start" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Дата и время окончания</label>
+                                    <input type="datetime-local" id="cfg-season-end" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <label class="flex items-center gap-2.5 cursor-pointer bg-[#101114] p-3 rounded-xl border border-[#272a33]">
+                                <input type="checkbox" id="cfg-season-lock" class="w-4 h-4 accent-amber-500">
+                                <span class="text-xs text-gray-300 font-semibold">Автоматически закрывать прием отчетов до начала и после окончания сезона</span>
+                            </label>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Важное объявление / памятка для бойцов (необязательно)</label>
+                                <textarea id="cfg-season-announcement" rows="3" placeholder="Например: Скриншоты принимаются только за текущую неделю. Призы выдаются в течение 24 часов после одобрения." class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none"></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-xs tracking-wider transition">
+                                Сохранить настройки сезона
+                            </button>
+                        </form>
                     </div>
                 </div>
             </section>
@@ -549,11 +618,19 @@
             authMode: 'login',
             currentUser: null,
             questFilter: 'all',
+            lbFilter: 'all',
             quests: [],
             rewards: [],
             submissions: [],
             payouts: [],
-            allUsers: []
+            allUsers: [],
+            season: {
+                name: 'Сезон Battle Pass МО',
+                startDate: '',
+                endDate: '',
+                lockSubmissions: false,
+                announcement: ''
+            }
         };
 
         onAuthStateChanged(auth, async (user) => {
@@ -575,6 +652,13 @@
                 if (snap.exists()) {
                     state.currentUser = { uid: snap.id, ...snap.data() };
                     routeUserScreen();
+                }
+            });
+            onSnapshot(doc(db, 'settings', 'season'), (snap) => {
+                if (snap.exists()) {
+                    state.season = { ...state.season, ...snap.data() };
+                    updateSeasonUI();
+                    renderQuests();
                 }
             });
             onSnapshot(collection(db, 'quests'), (snap) => {
@@ -602,6 +686,83 @@
                 renderAdminPanel();
             });
         }
+
+        // ЛОГИКА ТАЙМЕРА СЕЗОНА
+        function getSeasonStatus() {
+            const now = Date.now();
+            const startMs = state.season.startDate ? new Date(state.season.startDate).getTime() : null;
+            const endMs = state.season.endDate ? new Date(state.season.endDate).getTime() : null;
+
+            if (startMs && now < startMs) return { phase: 'upcoming', diff: startMs - now };
+            if (endMs && now > endMs) return { phase: 'ended', diff: 0 };
+            if (endMs) return { phase: 'active', diff: endMs - now };
+            return { phase: 'indefinite', diff: null };
+        }
+
+        function formatCountdown(ms) {
+            const totalSec = Math.max(0, Math.floor(ms / 1000));
+            const days = Math.floor(totalSec / 86400);
+            const hours = Math.floor((totalSec % 86400) / 3600);
+            const mins = Math.floor((totalSec % 3600) / 60);
+            const secs = totalSec % 60;
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${days}д ${pad(hours)}ч ${pad(mins)}м ${pad(secs)}с`;
+        }
+
+        function updateSeasonUI() {
+            const nameEl = document.getElementById('season-display-name');
+            const timerEl = document.getElementById('season-countdown-text');
+            const datesEl = document.getElementById('season-dates-sub');
+            const annBanner = document.getElementById('season-announcement-banner');
+            const annText = document.getElementById('season-announcement-text');
+
+            nameEl.textContent = state.season.name || 'Сезон Battle Pass МО';
+
+            if (state.season.announcement && state.season.announcement.trim()) {
+                annBanner.classList.remove('hidden');
+                annText.textContent = state.season.announcement;
+            } else {
+                annBanner.classList.add('hidden');
+            }
+
+            const status = getSeasonStatus();
+            if (status.phase === 'upcoming') {
+                nameEl.className = 'text-[11px] font-bold uppercase tracking-wider text-sky-400';
+                timerEl.textContent = `Старт: ${formatCountdown(status.diff)}`;
+                timerEl.className = 'font-hud text-xl font-black text-sky-400 tracking-wide';
+            } else if (status.phase === 'ended') {
+                nameEl.className = 'text-[11px] font-bold uppercase tracking-wider text-red-400';
+                timerEl.textContent = 'СЕЗОН ЗАВЕРШЁН';
+                timerEl.className = 'font-hud text-xl font-black text-red-400 tracking-wide';
+            } else if (status.phase === 'active') {
+                nameEl.className = 'text-[11px] font-bold uppercase tracking-wider text-amber-400';
+                timerEl.textContent = formatCountdown(status.diff);
+                timerEl.className = 'font-hud text-xl font-black text-white tracking-wide';
+            } else {
+                nameEl.className = 'text-[11px] font-bold uppercase tracking-wider text-emerald-400';
+                timerEl.textContent = 'Сезон активен';
+                timerEl.className = 'font-hud text-lg font-black text-emerald-400';
+            }
+
+            if (state.season.endDate) {
+                const d = new Date(state.season.endDate);
+                datesEl.textContent = `Окончание: ${d.toLocaleDateString('ru-RU')} в ${d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+            } else {
+                datesEl.textContent = '';
+            }
+
+            // Заполняем поля в админке, если пользователь не печатает в них прямо сейчас
+            const cfgName = document.getElementById('cfg-season-name');
+            if (cfgName && document.activeElement !== cfgName) {
+                cfgName.value = state.season.name || '';
+                document.getElementById('cfg-season-start').value = state.season.startDate || '';
+                document.getElementById('cfg-season-end').value = state.season.endDate || '';
+                document.getElementById('cfg-season-lock').checked = !!state.season.lockSubmissions;
+                document.getElementById('cfg-season-announcement').value = state.season.announcement || '';
+            }
+        }
+
+        setInterval(updateSeasonUI, 1000);
 
         function showOnlyScreen(screenId) {
             ['auth-screen', 'pending-approval-screen', 'app-content'].forEach(id => {
@@ -748,6 +909,7 @@
             document.getElementById('stat-current-lvl-exp').textContent = currentLvlExp;
             document.getElementById('stat-progress-bar').style.width = `${currentLvlExp}%`;
 
+            updateSeasonUI();
             renderBpTrack();
             renderQuests();
             renderHistory();
@@ -809,11 +971,21 @@
                 return;
             }
 
+            const status = getSeasonStatus();
+            const isLockedByTime = state.season.lockSubmissions && (status.phase === 'ended' || status.phase === 'upcoming');
+
             grid.innerHTML = filtered.map(q => {
                 const isOneTime = q.type === 'one_time';
                 const alreadyDone = isOneTime && state.submissions.some(s =>
                     s.userId === state.currentUser.uid && s.questId === q.id && (s.status === 'pending' || s.status === 'approved')
                 );
+
+                let actionBtn = `<button onclick="openSubmitModal('${q.id}')" class="w-full py-2 rounded-xl bg-[#22252e] hover:bg-amber-500 hover:text-black text-white text-xs font-bold transition">Сдать отчет</button>`;
+                if (alreadyDone) {
+                    actionBtn = `<button disabled class="w-full py-2 rounded-xl bg-[#101114] text-gray-500 text-xs font-bold cursor-not-allowed">Выполнено / На проверке</button>`;
+                } else if (isLockedByTime) {
+                    actionBtn = `<button disabled class="w-full py-2 rounded-xl bg-[#101114] text-red-400/70 text-xs font-bold cursor-not-allowed">${status.phase === 'ended' ? 'Сезон завершён' : 'Сезон ещё не начался'}</button>`;
+                }
 
                 return `
                     <div class="card-glass rounded-2xl p-5 flex flex-col justify-between hover:border-amber-500/40 transition">
@@ -827,12 +999,7 @@
                             <h4 class="text-base font-bold text-white mb-1.5">${q.title}</h4>
                             <p class="text-xs text-gray-400 leading-relaxed">${q.description}</p>
                         </div>
-                        <div class="mt-5 pt-3 border-t border-[#272a33]">
-                            ${alreadyDone
-                                ? `<button disabled class="w-full py-2 rounded-xl bg-[#101114] text-gray-500 text-xs font-bold cursor-not-allowed">Выполнено / На проверке</button>`
-                                : `<button onclick="openSubmitModal('${q.id}')" class="w-full py-2 rounded-xl bg-[#22252e] hover:bg-amber-500 hover:text-black text-white text-xs font-bold transition">Сдать отчет</button>`
-                            }
-                        </div>
+                        <div class="mt-5 pt-3 border-t border-[#272a33]">${actionBtn}</div>
                     </div>
                 `;
             }).join('');
@@ -864,14 +1031,17 @@
             }).join('');
         }
 
-        // ТОП БОЙЦОВ (Админы и следящие скрыты из списка)
         function renderLeaderboard() {
             const tbody = document.getElementById('leaderboard-tbody');
-            const regularPlayers = state.allUsers.filter(u => u.regStatus === 'approved' && u.role !== 'admin');
+            const regularPlayers = state.allUsers.filter(u =>
+                u.regStatus === 'approved' &&
+                u.role !== 'admin' &&
+                (state.lbFilter === 'all' || u.faction === state.lbFilter)
+            );
             const sorted = [...regularPlayers].sort((a, b) => (b.exp || 0) - (a.exp || 0));
 
             if (sorted.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-500 text-xs">В рейтинге пока нет участников.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-500 text-xs">В этом списке пока нет бойцов.</td></tr>`;
                 return;
             }
 
@@ -945,6 +1115,11 @@
             showToast(`Награда за ${level} ур. отправлена в реестр выдачи!`, 'success');
         };
 
+        window.copyNick = (nick) => {
+            navigator.clipboard.writeText(nick);
+            showToast(`Ник ${nick} скопирован!`, 'info');
+        };
+
         function renderAdminPanel() {
             if (state.currentUser?.role !== 'admin') return;
 
@@ -1013,7 +1188,11 @@
                 ? `<tr><td colspan="5" class="p-6 text-center text-gray-500 text-xs">Все призы выданы.</td></tr>`
                 : pendingPayouts.map(p => `
                     <tr>
-                        <td class="p-4 font-bold text-white">${p.nickname}</td>
+                        <td class="p-4 font-bold text-white">
+                            <button onclick="copyNick('${p.nickname}')" class="hover:text-amber-400 transition flex items-center gap-1.5" title="Скопировать ник">
+                                ${p.nickname} <i class="fa-regular fa-copy text-xs text-gray-500"></i>
+                            </button>
+                        </td>
                         <td class="p-4"><span class="text-xs font-bold px-2 py-0.5 rounded bg-[#272a33]">${p.faction}</span></td>
                         <td class="p-4 text-amber-400 font-bold">${p.level} ур.</td>
                         <td class="p-4 text-white font-semibold">${p.rewardTitle}</td>
@@ -1097,6 +1276,19 @@
                 </div>
             `).join('');
         }
+
+        window.adminSaveSeasonSettings = async (e) => {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('cfg-season-name').value.trim() || 'Сезон Battle Pass МО',
+                startDate: document.getElementById('cfg-season-start').value,
+                endDate: document.getElementById('cfg-season-end').value,
+                lockSubmissions: document.getElementById('cfg-season-lock').checked,
+                announcement: document.getElementById('cfg-season-announcement').value.trim()
+            };
+            await setDoc(doc(db, 'settings', 'season'), payload);
+            showToast('Настройки сезона сохранены!', 'success');
+        };
 
         window.seedDefaultData = async () => {
             const defaultQuests = [
@@ -1238,7 +1430,7 @@
         };
 
         window.switchAdminSubtab = (sub) => {
-            ['registrations', 'pending', 'payouts', 'users', 'manage'].forEach(s => {
+            ['registrations', 'pending', 'payouts', 'users', 'manage', 'season'].forEach(s => {
                 document.getElementById(`admin-panel-${s}`).classList.add('hidden');
                 document.getElementById(`adm-sub-${s}`).className = 'px-3.5 py-2 rounded-xl text-xs font-bold bg-[#181a20] text-gray-300 hover:text-white border border-[#272a33]';
             });
@@ -1254,6 +1446,16 @@
                     : 'px-3 py-1.5 rounded-lg text-xs font-bold text-gray-400 hover:text-white';
             });
             renderQuests();
+        };
+
+        window.filterLeaderboard = (faction) => {
+            state.lbFilter = faction;
+            ['all', 'ЛСа', 'СФа', 'ТСР'].forEach(f => {
+                document.getElementById(`lb-filter-${f}`).className = f === faction
+                    ? 'px-3 py-1 rounded-lg text-xs font-bold bg-amber-500 text-black'
+                    : 'px-3 py-1 rounded-lg text-xs font-bold text-gray-400 hover:text-white';
+            });
+            renderLeaderboard();
         };
 
         window.scrollBp = (offset) => document.getElementById('bp-track-container').scrollBy({ left: offset, behavior: 'smooth' });
