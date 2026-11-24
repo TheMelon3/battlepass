@@ -686,7 +686,6 @@
             }
         };
 
-        // Получаем requiredExp для конкретного уровня (если не задан в базе — берем (level - 1) * 100)
         function getRewardReqExp(reward) {
             if (reward && typeof reward.requiredExp === 'number' && !isNaN(reward.requiredExp)) {
                 return Math.max(0, reward.requiredExp);
@@ -694,7 +693,6 @@
             return Math.max(0, ((reward?.level || 1) - 1) * 100);
         }
 
-        // Расчет текущего уровня игрока и прогресса до следующего на основе заданных уровней
         function calculatePlayerProgress(exp = 0) {
             const safeExp = Math.max(0, Number(exp) || 0);
             const sorted = [...state.rewards].sort((a, b) => a.level - b.level);
@@ -1691,20 +1689,25 @@
         };
 
         window.switchTab = (tabName) => {
+            const isAdmin = state.currentUser?.role === 'admin';
+            if (tabName === 'admin' && !isAdmin) return;
+
             ['bp', 'quests', 'history', 'leaderboard', 'admin'].forEach(t => {
                 document.getElementById(`view-${t}`).classList.add('hidden');
                 const btn = document.getElementById(`tab-btn-${t}`);
                 if (btn) {
-                    btn.className = t === 'admin'
-                        ? 'nav-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-red-400 hover:bg-red-500/10 transition'
-                        : 'nav-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition';
+                    if (t === 'admin') {
+                        btn.className = `${isAdmin ? '' : 'hidden '}nav-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-red-400 hover:bg-red-500/10 transition`;
+                    } else {
+                        btn.className = 'nav-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition';
+                    }
                 }
             });
             document.getElementById(`view-${tabName}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`tab-btn-${tabName}`);
             if (activeBtn) {
                 activeBtn.className = tabName === 'admin'
-                    ? 'nav-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-red-500 text-white transition'
+                    ? `${isAdmin ? '' : 'hidden '}nav-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-red-500 text-white transition`
                     : 'nav-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-amber-500 text-black transition';
             }
         };
