@@ -267,13 +267,13 @@
                             <h3 class="text-lg font-bold text-white">Боевые задачи</h3>
                             <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30">
                                 <i class="fa-solid fa-rotate"></i>
-                                Смена списка через: <span id="quest-rotation-timer" class="font-hud text-sm tracking-wider text-white">00:00:00</span>
+                                Смена повторяемых через: <span id="quest-rotation-timer" class="font-hud text-sm tracking-wider text-white">00:00:00</span>
                             </span>
                             <span id="quest-pool-badge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#181a20] text-gray-400 border border-[#272a33]">
-                                Активно: 0 из 0
+                                В ротации: 0 из 0 • Сезонных: 0
                             </span>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">Обязательно наличие <code class="text-amber-400">/time</code> или отыгровки боди-камеры • Случайная выборка до 10 заданий обновляется каждые 3 часа</p>
+                        <p class="text-xs text-gray-400 mt-1">Обязательно наличие <code class="text-amber-400">/time</code> или отыгровки боди-камеры • До 10 повторяемых задач обновляются каждые 3 часа, единоразовые доступны весь сезон</p>
                     </div>
                     <div class="flex gap-2 bg-[#16181d] p-1 rounded-xl border border-[#272a33]">
                         <button onclick="filterQuests('all')" id="q-filter-all" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black">Все</button>
@@ -666,7 +666,7 @@
             return `${nickname.trim().toLowerCase()}@mo-redrock.local`;
         }
 
-        // Ротация заданий каждые 3 часа (синхронизировано по МСК)
+        // Ротация повторяемых заданий каждые 3 часа (синхронизировано по МСК)
         const ROTATION_INTERVAL_MS = 3 * 3600 * 1000;
         const ACTIVE_QUESTS_LIMIT = 10;
 
@@ -687,16 +687,18 @@
 
         function getActiveRotatedQuests(allQuests, windowId = getRotationWindowId()) {
             if (!allQuests || allQuests.length === 0) return [];
-            // Сортируем по id перед перемешиванием, чтобы порядок в базе не влиял на результат
-            const sorted = [...allQuests].sort((a, b) => (a.id || '').localeCompare(b.id || ''));
-            if (sorted.length <= ACTIVE_QUESTS_LIMIT) return sorted;
+            const repeatable = allQuests
+                .filter(q => q.type !== 'one_time')
+                .sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+
+            if (repeatable.length <= ACTIVE_QUESTS_LIMIT) return repeatable;
 
             const rand = mulberry32(windowId * 2654435761);
-            for (let i = sorted.length - 1; i > 0; i--) {
+            for (let i = repeatable.length - 1; i > 0; i--) {
                 const j = Math.floor(rand() * (i + 1));
-                [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
+                [repeatable[i], repeatable[j]] = [repeatable[j], repeatable[i]];
             }
-            return sorted.slice(0, ACTIVE_QUESTS_LIMIT);
+            return repeatable.slice(0, ACTIVE_QUESTS_LIMIT);
         }
 
         function formatLogDate(ts) {
@@ -880,7 +882,7 @@
                 state.lastRotationWindow = currentWindow;
                 if (state.currentUser) {
                     renderQuests();
-                    showToast('Список боевых задач обновился!', 'info');
+                    showToast('Список повторяемых задач обновился!', 'info');
                 }
             }
         }
@@ -1154,17 +1156,23 @@
             if (!state.currentUser) return;
 
             const currentWindow = getRotationWindowId();
-            const activePool = getActiveRotatedQuests(state.quests, currentWindow);
+            const activeRepeatable = getActiveRotatedQuests(state.quests, currentWindow);
+            const oneTimeQuests = state.quests
+                .filter(q => q.type === 'one_time')
+                .sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+
+            const totalRepeatableCount = state.quests.filter(q => q.type !== 'one_time').length;
 
             const poolBadge = document.getElementById('quest-pool-badge');
             if (poolBadge) {
-                poolBadge.textContent = `Активно: ${activePool.length} из ${state.quests.length}`;
+                poolBadge.textContent = `В ротации: ${activeRepeatable.length} из ${totalRepeatableCount} • Сезонных: ${oneTimeQuests.length}`;
             }
 
-            const filtered = activePool.filter(q => state.questFilter === 'all' || q.type === state.questFilter);
+            const combinedPool = [...activeRepeatable, ...oneTimeQuests];
+            const filtered = combinedPool.filter(q => state.questFilter === 'all' || q.type === state.questFilter);
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full card-glass rounded-2xl p-8 text-center text-gray-500 text-sm">В текущей 3-часовой ротации заданий по выбранному фильтру нет.</div>`;
+                grid.innerHTML = `<div class="col-span-full card-glass rounded-2xl p-8 text-center text-gray-500 text-sm">Заданий по выбранному фильтру пока нет.</div>`;
                 return;
             }
 
@@ -1555,7 +1563,9 @@
             if (!qList || !rList) return;
 
             if (totalQBadge) {
-                totalQBadge.textContent = `В пуле: ${state.quests.length} (в ротации по ${ACTIVE_QUESTS_LIMIT})`;
+                const repCount = state.quests.filter(q => q.type !== 'one_time').length;
+                const oneCount = state.quests.filter(q => q.type === 'one_time').length;
+                totalQBadge.textContent = `Повторяемых: ${repCount} (ротация по ${ACTIVE_QUESTS_LIMIT}) • Сезонных: ${oneCount}`;
             }
 
             if (seedBanner) {
@@ -1567,7 +1577,7 @@
                     <div>
                         <b class="text-white">${q.title}</b> <span class="text-amber-400 font-bold">(+${q.rewardExp} EXP)</span>
                         <span class="text-[10px] ml-1 px-1.5 py-0.2 rounded ${q.type === 'one_time' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}">
-                            ${q.type === 'one_time' ? '1 раз' : '3ч'}
+                            ${q.type === 'one_time' ? 'Сезонное' : 'Ротация 3ч'}
                         </span>
                         <div class="text-gray-500 truncate max-w-xs">${q.description}</div>
                     </div>
