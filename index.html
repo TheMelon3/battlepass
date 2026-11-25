@@ -179,6 +179,48 @@
             </div>
         </section>
 
+        <!-- ЭКРАН БЛОКИРОВКИ АККАУНТА (ЧЕРНЫЙ СПИСОК МЕРОПРИЯТИЯ) -->
+        <section id="banned-screen" class="hidden max-w-lg mx-auto mt-10">
+            <div class="card-glass rounded-2xl p-6 sm:p-8 text-center space-y-5 border border-red-500/50 shadow-2xl">
+                <div class="w-16 h-16 rounded-full bg-red-500/20 text-red-400 mx-auto flex items-center justify-center text-3xl border border-red-500/40">
+                    <i class="fa-solid fa-ban"></i>
+                </div>
+                <div>
+                    <span class="text-[11px] font-black uppercase tracking-widest px-2.5 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30">
+                        Черный список мероприятия
+                    </span>
+                    <h2 class="text-2xl font-black text-white mt-2">Доступ к Battle Pass заблокирован</h2>
+                    <p class="text-xs text-gray-400 mt-1">
+                        Участие в мероприятии, выполнение заданий и получение наград временно или бессрочно ограничены следящей администрацией.
+                    </p>
+                </div>
+
+                <div class="bg-[#101114] p-4 rounded-xl border border-red-500/30 text-left text-xs space-y-2.5">
+                    <div class="flex justify-between gap-2">
+                        <span class="text-gray-500">Участник:</span>
+                        <b id="ban-view-nick" class="text-white">Nick_Name</b>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-gray-500">Заблокировал:</span>
+                        <b id="ban-view-by" class="text-red-400">Следящий</b>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-gray-500">Срок окончания:</span>
+                        <b id="ban-view-until" class="text-amber-400">Бессрочно</b>
+                    </div>
+                    <div class="pt-2 border-t border-[#272a33]">
+                        <span class="text-gray-500 block mb-1">Причина занесения в ЧС:</span>
+                        <p id="ban-view-reason" class="text-red-300 font-semibold leading-relaxed bg-red-950/20 p-2.5 rounded-lg border border-red-500/20"></p>
+                    </div>
+                </div>
+
+                <div id="ban-countdown-box" class="bg-[#101114] py-3 px-4 rounded-xl border border-[#272a33]">
+                    <div class="text-[11px] uppercase tracking-wider text-gray-500">Осталось до разблокировки</div>
+                    <div id="ban-view-countdown" class="font-hud text-2xl font-black text-white mt-0.5">—</div>
+                </div>
+            </div>
+        </section>
+
         <!-- ЭКРАН ОЖИДАНИЯ ОДОБРЕНИЯ РЕГИСТРАЦИИ -->
         <section id="pending-approval-screen" class="hidden max-w-lg mx-auto mt-10">
             <div class="card-glass rounded-2xl p-6 sm:p-8 text-center space-y-4 border border-amber-500/40">
@@ -292,7 +334,7 @@
                                 В ротации: 0 из 0 • Сезонных: 0
                             </span>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">Обязательно наличие <code class="text-amber-400">/time</code> или боди-камеры • Рандомные 10 заданий обновляются каждые 3 часа</p>
+                        <p class="text-xs text-gray-400 mt-1">Обязательно наличие <code class="text-amber-400">/time</code> или боди-камеры • На рандом 10 заданий обновляются каждые 3 часа</p>
                     </div>
                     <div class="flex gap-2 bg-[#16181d] p-1 rounded-xl border border-[#272a33]">
                         <button onclick="filterQuests('all')" id="q-filter-all" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black">Все</button>
@@ -433,11 +475,11 @@
                     </div>
                 </div>
 
-                <!-- 5.5 Бойцы и Админы -->
+                <!-- 5.5 Бойцы и Админы (включая ЧС / Бан) -->
                 <div id="admin-panel-users" class="hidden space-y-4">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <input type="text" id="admin-user-search" oninput="renderAdminUsers()" placeholder="Поиск по нику..." class="px-4 py-2 rounded-xl bg-[#101114] border border-[#272a33] text-sm text-white focus:border-amber-500 focus:outline-none w-full sm:w-72">
-                        <span class="text-xs text-gray-400">Назначение следящих (админов), выдача/списание EXP</span>
+                        <span class="text-xs text-gray-400">Выдача/списание EXP, блокировка в ЧС мероприятия и назначение следящих</span>
                     </div>
                     <div class="card-glass rounded-2xl overflow-hidden">
                         <div class="overflow-x-auto">
@@ -448,7 +490,7 @@
                                         <th class="p-4">Фракция / Должность</th>
                                         <th class="p-4">/stats</th>
                                         <th class="p-4">Опыт (EXP)</th>
-                                        <th class="p-4">Роль</th>
+                                        <th class="p-4">Статус / Роль</th>
                                         <th class="p-4 text-right">Управление</th>
                                     </tr>
                                 </thead>
@@ -596,6 +638,52 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО: БЛОКИРОВКА В ЧС МЕРОПРИЯТИЯ -->
+    <div id="ban-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="card-glass rounded-2xl max-w-md w-full p-6 space-y-4 border border-red-500/40 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-black text-white flex items-center gap-2">
+                    <i class="fa-solid fa-ban text-red-500"></i> Занесение в ЧС мероприятия
+                </h3>
+                <button onclick="closeBanModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="bg-[#101114] p-3 rounded-xl border border-[#272a33] flex items-center justify-between">
+                <span class="text-xs text-gray-400">Блокируемый боец:</span>
+                <span id="ban-modal-nickname" class="font-bold text-white text-sm">Nick_Name</span>
+            </div>
+            <form onsubmit="handleBanSubmit(event)" class="space-y-4">
+                <input type="hidden" id="ban-modal-uid">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Срок блокировки (ЧС)</label>
+                    <select id="ban-modal-duration" onchange="toggleCustomBanDays()" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-white text-sm focus:border-red-500 focus:outline-none">
+                        <option value="1">1 день (24 часа)</option>
+                        <option value="3">3 дня</option>
+                        <option value="7" selected>7 дней</option>
+                        <option value="14">14 дней</option>
+                        <option value="30">30 дней</option>
+                        <option value="custom">Указать свое количество дней...</option>
+                        <option value="permanent">Навсегда (бессрочный ЧС)</option>
+                    </select>
+                </div>
+
+                <div id="ban-custom-days-box" class="hidden">
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Количество дней бана</label>
+                    <input type="number" id="ban-modal-custom-days" min="1" max="3650" value="5" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-white text-sm focus:border-red-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Причина блокировки</label>
+                    <textarea id="ban-modal-reason" required rows="3" placeholder="Например: Попытка подделки скриншотов / обман следящей администрации" class="w-full px-3.5 py-2.5 rounded-xl bg-[#101114] border border-[#272a33] text-white text-sm focus:border-red-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeBanModal()" class="flex-1 py-2.5 rounded-xl bg-[#272a33] text-gray-300 font-bold text-sm">Отмена</button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm">Заблокировать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
     <!-- СКРИПТ ЗИМНЕГО СНЕГА -->
@@ -724,6 +812,13 @@
             if (!ts) return '—';
             const d = new Date(ts);
             return `${d.toLocaleDateString('ru-RU')} ${d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+
+        // Проверка активности блокировки (ЧС мероприятия)
+        function isUserActivelyBanned(u) {
+            if (!u || !u.isBanned) return false;
+            if (!u.banUntil) return true; // Бессрочный ЧС
+            return Date.now() < u.banUntil;
         }
 
         let state = {
@@ -976,6 +1071,33 @@
             return `${days}д ${pad(hours)}ч ${pad(mins)}м ${pad(secs)}с`;
         }
 
+        function updateBanCountdownUI() {
+            const u = state.currentUser;
+            if (!u || !u.isBanned) return;
+
+            const cdEl = document.getElementById('ban-view-countdown');
+            if (!cdEl) return;
+
+            if (!u.banUntil) {
+                cdEl.textContent = 'Бессрочный ЧС';
+                return;
+            }
+
+            const diff = u.banUntil - Date.now();
+            if (diff <= 0) {
+                // Автоматическое снятие истекшего бана
+                updateDoc(doc(db, 'users', u.uid), {
+                    isBanned: false,
+                    banReason: '',
+                    banUntil: null,
+                    bannedBy: '',
+                    bannedAt: null
+                });
+                return;
+            }
+            cdEl.textContent = formatCountdown(diff);
+        }
+
         function updateRotationTimerUI() {
             const now = Date.now();
             const currentWindow = getRotationWindowId(now);
@@ -991,7 +1113,7 @@
 
             if (currentWindow !== state.lastRotationWindow) {
                 state.lastRotationWindow = currentWindow;
-                if (state.currentUser) {
+                if (state.currentUser && !isUserActivelyBanned(state.currentUser)) {
                     renderQuests();
                     showToast('Список повторяемых задач обновился!', 'info');
                 }
@@ -1000,6 +1122,7 @@
 
         function updateSeasonUI() {
             updateRotationTimerUI();
+            updateBanCountdownUI();
 
             const nameEl = document.getElementById('season-display-name');
             const timerEl = document.getElementById('season-countdown-text');
@@ -1058,7 +1181,7 @@
         setInterval(updateSeasonUI, 1000);
 
         function showOnlyScreen(screenId) {
-            ['auth-screen', 'pending-approval-screen', 'app-content'].forEach(id => {
+            ['auth-screen', 'banned-screen', 'pending-approval-screen', 'app-content'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(screenId).classList.remove('hidden');
@@ -1069,13 +1192,36 @@
             document.getElementById('notif-wrapper').classList.toggle('hidden', screenId !== 'app-content');
         }
 
-        function routeUserScreen() {
+        async function routeUserScreen() {
             const u = state.currentUser;
             if (!u) return showOnlyScreen('auth-screen');
 
             document.getElementById('header-nickname').textContent = u.nickname;
             document.getElementById('header-faction').textContent = u.faction;
             document.getElementById('header-rank').textContent = u.rank || '';
+
+            // Если срок бана истек — снимаем блокировку автоматически
+            if (u.isBanned && u.banUntil && Date.now() >= u.banUntil) {
+                await updateDoc(doc(db, 'users', u.uid), {
+                    isBanned: false,
+                    banReason: '',
+                    banUntil: null,
+                    bannedBy: '',
+                    bannedAt: null
+                });
+                return;
+            }
+
+            // Проверка на активный бан (ЧС мероприятия)
+            if (u.role !== 'admin' && isUserActivelyBanned(u)) {
+                showOnlyScreen('banned-screen');
+                document.getElementById('ban-view-nick').textContent = `${u.nickname} (${u.faction})`;
+                document.getElementById('ban-view-by').textContent = u.bannedBy || 'Следящий МО';
+                document.getElementById('ban-view-until').textContent = u.banUntil ? formatLogDate(u.banUntil) : 'Бессрочно (навсегда)';
+                document.getElementById('ban-view-reason').textContent = u.banReason || 'Нарушение правил мероприятия';
+                updateBanCountdownUI();
+                return;
+            }
 
             if (u.role === 'admin' || u.regStatus === 'approved') {
                 showOnlyScreen('app-content');
@@ -1145,6 +1291,11 @@
                         statsUrl,
                         regStatus: 'pending',
                         regRejectReason: '',
+                        isBanned: false,
+                        banReason: '',
+                        banUntil: null,
+                        bannedBy: '',
+                        bannedAt: null,
                         exp: 0,
                         claimedLevels: [],
                         role: 'player',
@@ -1369,6 +1520,7 @@
             const regularPlayers = state.allUsers.filter(u =>
                 u.regStatus === 'approved' &&
                 u.role !== 'admin' &&
+                !isUserActivelyBanned(u) &&
                 (state.lbFilter === 'all' || u.faction === state.lbFilter)
             );
             const sorted = [...regularPlayers].sort((a, b) => (b.exp || 0) - (a.exp || 0));
@@ -1409,6 +1561,10 @@
 
         window.handleReportSubmit = async (e) => {
             e.preventDefault();
+            if (isUserActivelyBanned(state.currentUser)) {
+                showToast('Ваш аккаунт в черном списке мероприятия!', 'error');
+                return;
+            }
             const questId = document.getElementById('modal-quest-id').value;
             const proofUrl = document.getElementById('modal-proof-url').value.trim();
             const quest = state.quests.find(q => q.id === questId);
@@ -1431,6 +1587,10 @@
         };
 
         window.claimReward = async (level, rewardTitle) => {
+            if (isUserActivelyBanned(state.currentUser)) {
+                showToast('Ваш аккаунт в черном списке мероприятия!', 'error');
+                return;
+            }
             if ((state.currentUser.claimedLevels || []).includes(level)) return;
 
             await updateDoc(doc(db, 'users', state.currentUser.uid), {
@@ -1453,10 +1613,69 @@
             showToast(`Ник ${nick} скопирован!`, 'info');
         };
 
+        // ФУНКЦИИ МОДАЛЬНОГО ОКНА БЛОКИРОВКИ (ЧС)
+        window.openBanModal = (uid, nickname) => {
+            if (uid === state.currentUser.uid) {
+                showToast('Нельзя заблокировать самого себя!', 'error');
+                return;
+            }
+            document.getElementById('ban-modal-uid').value = uid;
+            document.getElementById('ban-modal-nickname').textContent = nickname;
+            document.getElementById('ban-modal-duration').value = '7';
+            document.getElementById('ban-custom-days-box').classList.add('hidden');
+            document.getElementById('ban-modal-reason').value = '';
+            document.getElementById('ban-modal').classList.remove('hidden');
+        };
+
+        window.closeBanModal = () => document.getElementById('ban-modal').classList.add('hidden');
+
+        window.toggleCustomBanDays = () => {
+            const val = document.getElementById('ban-modal-duration').value;
+            document.getElementById('ban-custom-days-box').classList.toggle('hidden', val !== 'custom');
+        };
+
+        window.handleBanSubmit = async (e) => {
+            e.preventDefault();
+            const uid = document.getElementById('ban-modal-uid').value;
+            const durationVal = document.getElementById('ban-modal-duration').value;
+            const reason = document.getElementById('ban-modal-reason').value.trim();
+
+            let banUntil = null;
+            if (durationVal !== 'permanent') {
+                const days = durationVal === 'custom'
+                    ? Math.max(1, Number(document.getElementById('ban-modal-custom-days').value) || 1)
+                    : Number(durationVal);
+                banUntil = Date.now() + days * 24 * 3600 * 1000;
+            }
+
+            await updateDoc(doc(db, 'users', uid), {
+                isBanned: true,
+                banReason: reason,
+                banUntil,
+                bannedBy: state.currentUser.nickname,
+                bannedAt: Date.now()
+            });
+
+            closeBanModal();
+            showToast('Участник занесен в черный список мероприятия!', 'success');
+        };
+
+        window.adminUnbanUser = async (uid, nickname) => {
+            if (!confirm(`Снять блокировку (ЧС) с участника ${nickname}?`)) return;
+            await updateDoc(doc(db, 'users', uid), {
+                isBanned: false,
+                banReason: '',
+                banUntil: null,
+                bannedBy: '',
+                bannedAt: null
+            });
+            showToast(`Участник ${nickname} разблокирован!`, 'success');
+        };
+
         function renderAdminPanel() {
             if (state.currentUser?.role !== 'admin') return;
 
-            const pendingRegs = state.allUsers.filter(u => u.regStatus === 'pending');
+            const pendingRegs = state.allUsers.filter(u => u.regStatus === 'pending' && !isUserActivelyBanned(u));
             const pendingSubs = state.submissions.filter(s => s.status === 'pending');
             const pendingPayouts = state.payouts.filter(p => p.status === 'pending');
 
@@ -1645,8 +1864,29 @@
 
             tbody.innerHTML = users.map(u => {
                 const isAdmin = u.role === 'admin';
+                const banned = isUserActivelyBanned(u);
+
+                let statusBadge = isAdmin
+                    ? `<span class="px-2 py-0.5 rounded text-xs font-bold bg-red-500/20 text-red-400">СЛЕДЯЩИЙ (ADMIN)</span>`
+                    : `<span class="px-2 py-0.5 rounded text-xs font-bold bg-gray-500/20 text-gray-400">Боец</span>`;
+
+                if (banned) {
+                    const untilStr = u.banUntil ? `до ${formatLogDate(u.banUntil)}` : 'навсегда';
+                    statusBadge = `
+                        <div class="space-y-0.5">
+                            <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-600 text-white"><i class="fa-solid fa-ban mr-1"></i>В ЧС (${untilStr})</span>
+                            <div class="text-[11px] text-red-400 max-w-[200px] truncate" title="${u.banReason || ''}">${u.banReason || ''}</div>
+                        </div>
+                    `;
+                }
+
+                const banBtn = isAdmin ? '' : (banned
+                    ? `<button onclick="adminUnbanUser('${u.uid}', '${u.nickname}')" class="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-black text-xs font-bold transition">Разбанить</button>`
+                    : `<button onclick="openBanModal('${u.uid}', '${u.nickname}')" class="px-2.5 py-1 rounded bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white text-xs font-bold transition">ЧС / Бан</button>`
+                );
+
                 return `
-                    <tr class="hover:bg-[#1a1d24]">
+                    <tr class="${banned ? 'bg-red-950/10' : 'hover:bg-[#1a1d24]'}">
                         <td class="p-4 font-bold text-white">${u.nickname}</td>
                         <td class="p-4 text-xs">
                             <span class="px-2 py-0.5 rounded bg-[#272a33] font-bold">${u.faction}</span>
@@ -1656,17 +1896,13 @@
                             ${u.statsUrl ? `<a href="${u.statsUrl}" target="_blank" class="text-blue-400 hover:underline text-xs">/stats</a>` : '—'}
                         </td>
                         <td class="p-4 font-mono font-bold text-amber-400">${u.exp || 0} EXP</td>
-                        <td class="p-4">
-                            ${isAdmin
-                                ? `<span class="px-2 py-0.5 rounded text-xs font-bold bg-red-500/20 text-red-400">СЛЕДЯЩИЙ (ADMIN)</span>`
-                                : `<span class="px-2 py-0.5 rounded text-xs font-bold bg-gray-500/20 text-gray-400">Боец</span>`
-                            }
-                        </td>
-                        <td class="p-4 text-right space-x-1.5">
+                        <td class="p-4">${statusBadge}</td>
+                        <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
                             <button onclick="adminEditUserExp('${u.uid}', '${u.nickname}', ${u.exp || 0})" class="px-2.5 py-1 rounded bg-[#272a33] hover:bg-amber-500 hover:text-black text-xs font-bold transition">
                                 ± EXP
                             </button>
-                            <button onclick="adminToggleAdminRole('${u.uid}', '${u.nickname}', '${u.role}')" class="px-2.5 py-1 rounded ${isAdmin ? 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white' : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-black'} text-xs font-bold transition">
+                            ${banBtn}
+                            <button onclick="adminToggleAdminRole('${u.uid}', '${u.nickname}', '${u.role}')" class="px-2.5 py-1 rounded ${isAdmin ? 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white' : 'bg-sky-500/20 text-sky-400 hover:bg-sky-500 hover:text-black'} text-xs font-bold transition">
                                 ${isAdmin ? 'Снять админа' : 'Назначить админом'}
                             </button>
                         </td>
@@ -1808,7 +2044,7 @@
             }
             const newRole = currentRole === 'admin' ? 'player' : 'admin';
             if (!confirm(`${newRole === 'admin' ? 'Назначить следящим (админом)' : 'Снять права админа с'} игрока ${nickname}?`)) return;
-            await updateDoc(doc(db, 'users', uid), { role: newRole, regStatus: 'approved' });
+            await updateDoc(doc(db, 'users', uid), { role: newRole, regStatus: 'approved', isBanned: false });
             showToast(`Права пользователя ${nickname} обновлены!`, 'success');
         };
 
